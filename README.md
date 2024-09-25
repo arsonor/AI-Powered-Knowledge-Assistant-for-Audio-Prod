@@ -56,13 +56,13 @@ The resulting dataset was first a JSON file, [`data/arsonor_data_id.json`](data/
 
 The final dataset is this one [`data/arsonor_chunks_id.json`](data/arsonor_chunks_id.json) with **589 JSON records** in this form:
 
-{ 
-    **'article_id'**: "unique article identifier",
+{   
+    **'article_id'**: "unique article identifier",  
     **'title'**: "main title of the article",  
-    **'category'**: "the category from where it belongs ('home-studio', 'sound design' or 'post-production')",    
-    **'tags'**: "a list of keywords based on the article content",
-    **'chunk_id'**: "unique chunk identifier in the form 'article_id'-#",
-    **'chunk_text'**: "the text content in the chunk"
+    **'category'**: "the category from where it belongs ('home-studio', 'sound design' or 'post-production')",  
+    **'tags'**: "a list of keywords based on the article content",  
+    **'chunk_id'**: "unique chunk identifier in the form 'article_id'-#",  
+    **'chunk_text'**: "the text content in the chunk"  
 }
 
 This file serves as the foundation for the knowledge base in the assistant app to answer Audio Production queries.
