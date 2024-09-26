@@ -113,12 +113,12 @@ First, run `postgres`:
 docker-compose up postgres
 ```
 
-Then run the [`db_prep.py`](fitness_assistant/db_prep.py) script:
+Then run the [`db_prep.py`](arsonor_assistant/db_prep.py) script:
 
 ```bash
 pipenv shell
 
-cd fitness_assistant
+cd arsonor_assistant
 
 export POSTGRES_HOST=localhost
 python db_prep.py
@@ -128,7 +128,7 @@ To check the content of the database, use `pgcli` (already
 installed with pipenv):
 
 ```bash
-pipenv run pgcli -h localhost -U your_username -d course_assistant -W
+pipenv run pgcli -h localhost -U your_username -d arsonor_assistant -W
 ```
 
 You can view the schema using the `\d` command:
@@ -172,7 +172,7 @@ Now run the app on your host machine:
 ```bash
 pipenv shell
 
-cd fitness_assistant
+cd arsonor_assistant
 
 export POSTGRES_HOST=localhost
 python app.py
@@ -189,19 +189,19 @@ as in the previous section.
 Next, build the image:
 
 ```bash
-docker build -t fitness-assistant .
+docker build -t arsonor-assistant .
 ```
 
 And run it:
 
 ```bash
 docker run -it --rm \
-    --network="fitness-assistant_default" \
+    --network="arsonor-assistant_default" \
     --env-file=".env" \
     -e OPENAI_API_KEY=${OPENAI_API_KEY} \
-    -e DATA_PATH="data/data.csv" \
+    -e DATA_PATH="data/arsonor_chunks_id.json" \
     -p 5000:5000 \
-    fitness-assistant
+    arsonor-assistant
 ```
 
 ### Time configuration
@@ -215,7 +215,7 @@ your logs:
 ```
 Database timezone: Etc/UTC
 Database current time (UTC): 2024-08-24 06:43:12.169624+00:00
-Database current time (Europe/Berlin): 2024-08-24 08:43:12.169624+02:00
+Database current time (Europe/Brussels): 2024-08-24 08:43:12.169624+02:00
 Python current time: 2024-08-24 08:43:12.170246+02:00
 Inserted time (UTC): 2024-08-24 06:43:12.170246+00:00
 Inserted time (Europe/Berlin): 2024-08-24 08:43:12.170246+02:00
@@ -248,13 +248,13 @@ Note that the time is in UTC.
 After that, start the application (and the database) again.
 
 
-## *[in progress]* Using the application
+## Using the application
 
 When the application is running, we can start using it.
 
 ### CLI
 
-We built an interactive CLI application using
+I built an interactive CLI application using
 [questionary](https://questionary.readthedocs.io/en/stable/).
 
 To start it, run:
@@ -264,7 +264,7 @@ pipenv run python cli.py
 ```
 
 You can also make it randomly select a question from
-[our ground truth dataset](data/ground-truth-retrieval.csv):
+[ground truth dataset](data/ground-truth-data.csv):
 
 ```bash
 pipenv run python cli.py --random
@@ -289,7 +289,7 @@ You can also use `curl` for interacting with the API:
 
 ```bash
 URL=http://localhost:5000
-QUESTION="Is the Lat Pulldown considered a strength training activity, and if so, why?"
+QUESTION="Comment puis-je augmenter le volume perçu de ma musique sans saturer le son?"
 DATA='{
     "question": "'${QUESTION}'"
 }'
@@ -304,9 +304,9 @@ You will see something like the following in the response:
 
 ```json
 {
-    "answer": "Yes, the Lat Pulldown is considered a strength training activity. This classification is due to it targeting specific muscle groups, specifically the Latissimus Dorsi and Biceps, which are essential for building upper body strength. The exercise utilizes a machine, allowing for controlled resistance during the pulling action, which is a hallmark of strength training.",
+    "answer": "",
     "conversation_id": "4e1cef04-bfd9-4a2c-9cdd-2771d8f70e4d",
-    "question": "Is the Lat Pulldown considered a strength training activity, and if so, why?"
+    "question": "Comment puis-je augmenter le volume perçu de ma musique sans saturer le son?"
 }
 ```
 
@@ -334,12 +334,12 @@ After sending it, you'll receive the acknowledgement:
 }
 ```
 
-## *[to be done]* Code
+## Code
 
 The code for the application is in the [`arsonor_assistant`](arsonor_assistant/) folder:
 
 - [`app.py`](arsonor_assistant/app.py) - the Flask API, the main entrypoint to the application
-- [`rag.py`](arsonor_assistant/rag.py) - the main RAG logic for building the retrieving the data and building the prompt
+- [`rag.py`](arsonor_assistant/rag.py) - the main RAG logic for retrieving the data and building the prompt
 - [`ingest.py`](arsonor_assistant/ingest.py) - loading the data into the knowledge base
 - [`minsearch.py`](arsonor_assistant/minsearch.py) - an in-memory search engine
 - [`db.py`](arsonor_assistant/db.py) - the logic for logging the requests and responses to postgres
@@ -348,11 +348,11 @@ The code for the application is in the [`arsonor_assistant`](arsonor_assistant/)
 We also have some code in the project root directory:
 
 - [`test.py`](test.py) - select a random question for testing
-- [`cli.py`](cli.py) - interactive CLI for the APP
+- [`cli.py`](cli.py) - interactive CLI for the App
 
 ### Interface
 
-We use Flask for serving the application as an API.
+I use Flask for serving the application as an API.
 
 Refer to the ["Using the Application" section](#using-the-application)
 for examples on how to interact with the application.
@@ -361,16 +361,16 @@ for examples on how to interact with the application.
 
 The ingestion script is in [`ingest.py`](arsonor_assistant/ingest.py).
 
-Since we use an in-memory database, `minsearch`, as our
-knowledge base, we run the ingestion script at the startup
+Since I use an in-memory database, `minsearch`, as the
+knowledge base, I run the ingestion script at the startup
 of the application.
 
 It's executed inside [`rag.py`](arsonor_assistant/rag.py)
 when we import it.
 
-## *[to be done]* Experiments
+## Notebooks and system evaluations
 
-For experiments, we use Jupyter notebooks.
+For experiments, I use Jupyter notebooks.
 They are in the [`notebooks`](notebooks/) folder.
 
 To start Jupyter, run:
@@ -380,10 +380,11 @@ cd notebooks
 pipenv run jupyter notebook
 ```
 
-We have the following notebooks:
+I have the following notebooks:
 
-- [`rag-test.ipynb`](notebooks/rag-test.ipynb): The RAG flow and evaluating the system.
-- [`evaluation-data-generation.ipynb`](notebooks/evaluation-data-generation.ipynb): Generating the ground truth dataset for retrieval evaluation.
+- [`arsonor_parse.ipynb`](notebooks/arsonor_parse.ipynb): The code for retrieving, chunking and cleaning articles text from the website and export a json file
+- [`rag-test.ipynb`](notebooks/rag-test.ipynb): The RAG flow and evaluation of the system
+- [`ground_truth_data_generation.ipynb`](notebooks/ground_truth_data_generation.ipynb): Generating the ground-truth dataset for retrieval evaluation
 
 ### Retrieval evaluation
 
@@ -407,26 +408,19 @@ boost = {
 
 ### RAG flow evaluation
 
-We used the LLM-as-a-Judge metric to evaluate the quality
-of our RAG flow.
+I used the LLM-as-a-Judge method 2 metric to evaluate the quality
+of my RAG flow.
 
-For `gpt-4o-mini`, in a sample with 200 records, we had:
-
--  (%) `RELEVANT`
--  (%) `PARTLY_RELEVANT`
--  (%) `NON_RELEVANT`
-
-We also tested `gpt-4o`:
+For `gpt-4o-mini`, in a sample with 200 records, I had:
 
 -  (%) `RELEVANT`
 -  (%) `PARTLY_RELEVANT`
 -  (%) `NON_RELEVANT`
 
-The difference is minimal, so we opted for `gpt-4o-mini`.
 
-## *[in progress]* Monitoring
+## Monitoring
 
-We use Grafana for monitoring the application. 
+I use Grafana for monitoring the application. 
 
 It's accessible at [localhost:3000](http://localhost:3000):
 
@@ -486,7 +480,7 @@ course and links for further reading.
 
 ### Flask
 
-We use Flask for creating the API interface for our application.
+I use Flask for creating the API interface for our application.
 It's a web application framework for Python: we can easily
 create an endpoint for asking questions and use web clients
 (like `curl` or `requests`) for communicating with it.
