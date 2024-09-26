@@ -78,14 +78,16 @@ This file serves as the foundation for the knowledge base in the assistant app t
 
 ## Preparation
 
-Since we use OpenAI, you need to provide the API key:
+Since we use OpenAI, you will need to provide the API key. If you don't have already an account, ...(For OpenAI, it's recommended to create a new project and use a separate key)
 
-1. Install `direnv`. If you use Ubuntu, run `sudo apt install direnv` and then `direnv hook bash >> ~/.bashrc`.
-2. Copy `.envrc_template` into `.envrc` and insert your key there.
-3. For OpenAI, it's recommended to create a new project and use a separate key.
+Then follow these instructions:
+
+1. Run a Codespace from the repository
+2. Install `direnv`: for this, run the following lines `sudo apt update`, `sudo apt install direnv` and then `direnv hook bash >> ~/.bashrc`
+3. Insert your API key in the `.envrc_template` and rename it `.envrc`
 4. Run `direnv allow` to load the key into your environment.
 
-For dependency management, we use pipenv, so you need to install it:
+For dependency management, I use pipenv, so you need to install it:
 
 ```bash
 pip install pipenv
@@ -97,7 +99,7 @@ Once installed, you can install the app dependencies:
 pipenv install --dev
 ```
 
-## *[to be installed]* Running the application
+## Running the application
 
 
 ### Database configuration
