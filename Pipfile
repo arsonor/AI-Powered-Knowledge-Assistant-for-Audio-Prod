@@ -13,8 +13,6 @@ streamlit = "*"
 psycopg2-binary = "*"
 python-dotenv = "*"
 gunicorn = "*"
-psycopg2 = "*"
-jq = "*"
 
 [dev-packages]
 tqdm = "*"
