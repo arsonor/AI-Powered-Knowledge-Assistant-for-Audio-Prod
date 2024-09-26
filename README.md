@@ -407,7 +407,7 @@ When prompted, keep "admin" as the new password.
 ### Dashboards
 
 <p align="center">
-  <img src="images/dash.png">
+  <img src="images/Capture d'écran 2024-09-26 233521.png">
 </p>
 
 The monitoring dashboard contains several panels:
