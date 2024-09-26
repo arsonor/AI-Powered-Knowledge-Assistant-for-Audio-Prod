@@ -124,25 +124,6 @@ export POSTGRES_HOST=localhost
 python db_prep.py
 ```
 
-To check the content of the database, use `pgcli` (already
-installed with pipenv):
-
-```bash
-pipenv run pgcli -h localhost -U your_username -d arsonor_assistant -W
-```
-
-You can view the schema using the `\d` command:
-
-```sql
-\d conversations;
-```
-
-And select from this table:
-
-```sql
-select * from conversations;
-```
-
 ### Running with Docker-Compose
 
 The easiest way to run the application is with `docker-compose`:
