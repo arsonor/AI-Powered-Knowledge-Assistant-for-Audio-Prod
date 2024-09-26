@@ -8,19 +8,33 @@
 
 It covers essential topics such as sound design, post-production and home-studio optimization. You will find practical advice on improving sound quality, managing audio levels and using tools such as VST synths and mixing software. The goal is to make home sound creation accessible, by providing techniques and tips for a professional result.
 
-**Important note**: This blog is in **french**! as it was first built to help the french-speaking community.  
-**But don't worry!** 
-All information you need to know to run the application is written in English. Just don't be surprised if I use test queries in french ;)
-
 This project introduces an innovative LLM RAG (Retrieval-Augmented Generation) system designed to 
 answer readers' questions on music production, sound design, post-production, and more.
 
 This system enhances the user experience by delivering accurate, context-aware responses to queries, drawing from the blog's extensive content library, 
 making it easier for creators to find the information they need.
 
+**Important note**: This blog is in **french**! as it was first built to help the french-speaking community.  
+**But don't worry!** 
+All information you need to know to run the application is written in English. Just don't be surprised, the system will return answers in french and I will use test queries in french ;)
+
 This project was implemented for 
 [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) -
 a free course about LLMs and RAG.
+
+## Table of contents
+
+[Project overview](#project-overview)  
+[Dataset](#dataset)  
+[Technologies used in this project](#technologies-used-in-this-project)  
+[Preparation](#preparation)  
+[Running the application](#running-the-application)  
+[Using the application](#using-the-application)  
+[Details on the code](#code)  
+[Notebooks and system evaluations](#notebooks-and-system-evaluations)  
+[Monitoring](#monitoring)  
+[Background](#background)  
+[Acknowledgements](#acknowledgements)
 
 ## Project overview
 
@@ -270,7 +284,7 @@ You can also use `curl` for interacting with the API:
 
 ```bash
 URL=http://localhost:5000
-QUESTION="Comment puis-je augmenter le volume perçu de ma musique sans saturer le son?"
+QUESTION="Comment puis-je augmenter le loudness de ma musique sans saturer le son?"
 DATA='{
     "question": "'${QUESTION}'"
 }'
@@ -285,16 +299,16 @@ You will see something like the following in the response:
 
 ```json
 {
-    "answer": "",
-    "conversation_id": "4e1cef04-bfd9-4a2c-9cdd-2771d8f70e4d",
-    "question": "Comment puis-je augmenter le volume perçu de ma musique sans saturer le son?"
+    "answer": "Pour augmenter le loudness de votre musique sans saturer le son, il est important de comprendre et d'appliquer plusieurs outils et techniques audio : **Compression Dynamique** : L'utilisation d'un compresseur permet de réduire la plage dynamique de votre signal audio. En comprimant les pics de volume, etc, etc....",
+    "conversation_id": "b2aef1e8-5140-4185-bc53-7db28ba9815a",
+    "question": "Comment puis-je augmenter le loudness de ma musique sans saturer le son?"
 }
 ```
 
 Sending feedback:
 
 ```bash
-ID="4e1cef04-bfd9-4a2c-9cdd-2771d8f70e4d"
+ID="b2aef1e8-5140-4185-bc53-7db28ba9815a"
 URL=http://localhost:5000
 FEEDBACK_DATA='{
     "conversation_id": "'${ID}'",
@@ -311,7 +325,7 @@ After sending it, you'll receive the acknowledgement:
 
 ```json
 {
-    "message": "Feedback received for conversation 4e1cef04-bfd9-4a2c-9cdd-2771d8f70e4d: 1"
+    "message": "Feedback received for conversation b2aef1e8-5140-4185-bc53-7db28ba9815a: 1"
 }
 ```
 
@@ -471,7 +485,7 @@ In our case, we can send questions to `http://localhost:5000/question`.
 For more information, visit the [official Flask documentation](https://flask.palletsprojects.com/).
 
 
-## Acknowledgements 
+## Acknowledgements
 
 A grateful thanks to [Alexey Grigorev](https://github.com/alexeygrigorev) for the creation and supervision of this LLM Zoomcamp without which this project would not have been possible. I would like to thank him as well for all his valuable teaching and support.
 

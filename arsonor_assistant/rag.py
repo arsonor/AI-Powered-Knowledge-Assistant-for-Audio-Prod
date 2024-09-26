@@ -19,7 +19,7 @@ def search(query):
     }
 
     results = index.search(
-        query=query, filter_dict={'category'}, boost_dict=boost, num_results=30
+        query=query, filter_dict={}, boost_dict=boost, num_results=20
     )
 
     return results
