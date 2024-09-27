@@ -22,7 +22,7 @@ services:
     depends_on:
       - postgres
 
-streamlit:
+  streamlit:
     build:
       context: .
       dockerfile: Dockerfile
