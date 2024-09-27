@@ -13,7 +13,7 @@ question = st.text_input("Enter your question:")
 if st.button("Submit Question"):
     if question:
         # Send the question to the Flask API
-        response = requests.post("http://localhost:5000/question", json={"question": question})
+        response = requests.post("http://app:5000/question", json={"question": question})
         
         if response.status_code == 200:
             result = response.json()
@@ -37,7 +37,7 @@ if st.button("Submit Feedback"):
     if conversation_id:
         # Send the feedback to the Flask API
         feedback_response = requests.post(
-            "http://localhost:5000/feedback", 
+            "http://app:5000/feedback", 
             json={"conversation_id": conversation_id, "feedback": feedback_value}
         )
         
