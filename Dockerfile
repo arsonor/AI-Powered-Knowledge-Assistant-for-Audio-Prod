@@ -12,5 +12,6 @@ RUN pipenv install --deploy --ignore-pipfile --system
 COPY arsonor_assistant .
 
 EXPOSE 5000
+EXPOSE 8501
 
-CMD gunicorn --bind 0.0.0.0:5000 app:app
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
