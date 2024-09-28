@@ -4,19 +4,15 @@
   <img src="images/arsonor-assistant-banner.jpeg">
 </p>
 
-[Arsonor](https://arsonor.com) is a blog dedicated to home-studio audio production, aimed at creators of music, podcasts, videos, films and video games.
+[Arsonor](https://arsonor.com) is a blog with french content dedicated to home-studio audio production, aimed at creators of music, podcasts, videos, films and video games.
 
-It covers essential topics such as sound design, post-production and home-studio optimization. You will find practical advice on improving sound quality, managing audio levels and using tools such as VST synths and mixing software. The goal is to make home sound creation accessible, by providing techniques and tips for a professional result.
+It covers essential topics such as sound engineering, sound design, post-production and home-studio optimization. You will find practical advice on improving sound quality, managing audio levels and using tools such as VST synths and mixing software. The goal is to make home sound creation accessible, by providing techniques and tips for a professional result.
 
 This project introduces an innovative LLM RAG (Retrieval-Augmented Generation) system designed to 
 answer readers' questions on music production, sound design, post-production, and more.
 
 This system enhances the user experience by delivering accurate, context-aware responses to queries, drawing from the blog's extensive content library, 
 making it easier for creators to find the information they need.
-
-**Important note**: This blog is in **french**! as it was first built to help the french-speaking community.  
-**But don't worry!** 
-All information you need to know to run the application is written in English. Just don't be surprised, the system will return answers in french and I will use test queries in french ;)
 
 This project was implemented for 
 [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) -
@@ -31,7 +27,7 @@ a free course about LLMs and RAG.
 [Running the application](#running-the-application)  
 [Using the application](#using-the-application)  
 [Details on the code](#code)  
-[Notebooks and system evaluations](#notebooks-and-system-evaluations)  
+[Notebooks and rag-system evaluations](#notebooks-and-system-evaluations)  
 [Monitoring](#monitoring)  
 [Background](#background)  
 [Acknowledgements](#acknowledgements)
@@ -59,6 +55,11 @@ Examples of Use:
 
 This system transforms how readers interact with the reading content of this blog, 
 providing immediate, accurate answers, and enhancing their journey in audio production.
+
+**[IMPORTANT NOTE]**: This blog is in **french**! as it was first built to help the french-speaking community.  
+**But for non-french-speaker users, don't worry!** 
+All information you need to know to run the application is written in English. Just don't be surprised, the system will return answers in french and I will use test queries in french ;)  
+For testing the app, you can either run cli.py or test.py that automatically grab a random question (see later). Or if you want to write a question yourself, translate it in french for better experience.
 
 ## Dataset
 
@@ -88,15 +89,16 @@ This file serves as the foundation for the knowledge base in the assistant app t
 - [Minsearch](https://github.com/alexeygrigorev/minsearch) for full-text search
 - Flask as the API interface (see [Background](#background) for more information on Flask)
 - Grafana for monitoring and PostgreSQL as the backend for it
-- OpenAI as an LLM
+- OpenAI as an LLM (gpt-4o-mini)
 
-## Preparation
+## Preparation (API Key and installing dependencies)
 
-Since we use OpenAI, you will need to provide the API key. If you don't have already an account, ...(For OpenAI, it's recommended to create a new project and use a separate key)
+Since this system use OpenAI, you will need to provide the API key. If you don't have already an account, go to [OpenAI platform](https://platform.openai.com/), create one and put a little money on it. The usage cost for the model used (gpt-4o-mini) is ridiculous.  
+For OpenAI, it's recommended to create a new project and use a separate key.
 
 Then follow these instructions:
 
-1. Run a Codespace from the repository
+1. Run a Codespace from this repository (or fork it, or git clone it, whatever you want to do)
 2. Install `direnv`: for this, run the following lines `sudo apt update`, `sudo apt install direnv` and then `direnv hook bash >> ~/.bashrc`
 3. Insert your API key in the `.envrc_template` and rename it `.envrc`
 4. Run `direnv allow` to load the key into your environment.
