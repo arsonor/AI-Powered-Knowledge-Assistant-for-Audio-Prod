@@ -337,23 +337,36 @@ I have the following notebooks:
 
 ### Retrieval evaluation
 
-The basic approach - using `minsearch` without any boosting - gave the following metrics:
+The basic approach - using `minsearch` without any boosting - and a number of 10 results gave the following metrics:
 
-- Hit rate: %
-- MRR: %
+- at the chunk-level: Hit rate: 53%, MRR: 31%
+- at the article-level: Hit rate: 59%, MRR: 49%
 
-The improved version (with tuned boosting):
+The search system is more likely to retrieve the correct article than the exact chunk.  
+Anyway, the system needs improvement.  
+The lower chunk-based MRR and hit rate imply that additional effort is needed to refine the search results at the chunk level.  
+Possible ways to improve could include:  
+  - Improving the text matching at the chunk level by tweaking the search algorithm.  
+  - Boosting relevance for certain fields (like the chunk_text or specific tags).
+  - Investigating semantic search approaches to better understand and retrieve the appropriate chunks within articles.
 
-- Hit rate: %
-- MRR: %
+With tuned boosting, the results at chunk-level improve quite drastically:
+- Hit rate: 70%, MRR: 42%
 
-The best boosting parameters:
-
+The best boosting parameters:  
 ```python
 boost = {
-    
+'title': 1.48,
+'tags': 0.31,
+'chunk_text': 2.91  
 }
 ```
+
+Next Steps:  
+- Increase chunk size
+- Consider using advanced ranking techniques, such as semantic search models (e.g., BERT-based models), to better capture the meaning of both the query and chunk  
+- Analyze Ranking Strategy: retrieve at the article-level first based on 'title' and 'tags' attributes, then at the chunk-level
+- Try other techniques: hybrid search (combining keyword and semantic search), re-ranking, ...
 
 ### RAG flow evaluation
 
@@ -362,9 +375,8 @@ of my RAG flow.
 
 For `gpt-4o-mini`, in a sample with 200 records, I had:
 
--  (%) `RELEVANT`
--  (%) `PARTLY_RELEVANT`
--  (%) `NON_RELEVANT`
+- RELEVANT           98.5%  
+- PARTLY_RELEVANT    1.5%
 
 
 ## Monitoring
