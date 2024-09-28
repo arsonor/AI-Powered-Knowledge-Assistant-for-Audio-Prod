@@ -118,7 +118,7 @@ pipenv install --dev
 ## Running the application
 
 
-### Database configuration
+### 1- Database configuration
 
 Before the application starts for the first time, the database
 needs to be initialized.
@@ -129,18 +129,14 @@ First, run `postgres`:
 docker-compose up postgres
 ```
 
-Then run the [`db_prep.py`](arsonor_assistant/db_prep.py) script:
+Then run the [`db_prep.py`](arsonor_assistant/db_prep.py) script. For this run these lines in order:
 
-```bash
-pipenv shell
+`pipenv shell`
+`cd arsonor_assistant`
+`export POSTGRES_HOST=localhost`
+`python db_prep.py`
 
-cd arsonor_assistant
-
-export POSTGRES_HOST=localhost
-python db_prep.py
-```
-
-### Running with Docker-Compose
+### 2- Running with Docker-Compose
 
 The easiest way to run the application is with `docker-compose`:
 
@@ -148,7 +144,7 @@ The easiest way to run the application is with `docker-compose`:
 docker-compose up
 ```
 
-### Running locally
+### Optional: Running locally
 
 If you want to run the application locally,
 start only postres and grafana:
@@ -175,7 +171,7 @@ export POSTGRES_HOST=localhost
 python app.py
 ```
 
-### Running with Docker (without compose)
+### Optional: Running with Docker (without compose)
 
 Sometimes you might want to run the application in
 Docker without Docker Compose, e.g., for debugging purposes.
@@ -207,7 +203,7 @@ When the application is running, we can start using it.
 
 ### CLI
 
-I built an interactive CLI application using
+You can find an interactive CLI application using
 [questionary](https://questionary.readthedocs.io/en/stable/).
 
 To start it, run:
@@ -298,7 +294,7 @@ The code for the application is in the [`arsonor_assistant`](arsonor_assistant/)
 - [`db.py`](arsonor_assistant/db.py) - the logic for logging the requests and responses to postgres
 - [`db_prep.py`](arsonor_assistant/db_prep.py) - the script for initializing the database
 
-We also have some code in the project root directory:
+There is also some code in the project root directory:
 
 - [`test.py`](test.py) - select a random question for testing
 - [`cli.py`](cli.py) - interactive CLI for the App
@@ -386,16 +382,9 @@ running (it starts automatically when you do `docker-compose up`).
 
 Then run:
 
-```bash
-pipenv shell
-
-cd grafana
-
-# make sure the POSTGRES_HOST variable is not overwritten 
-env | grep POSTGRES_HOST
-
-python init.py
-```
+`pipenv shell` --> `cd grafana` --> `env | grep POSTGRES_HOST` (make sure the POSTGRES_HOST variable is not overwritten)    
+And finally run the script:
+`python init.py`
 
 Then go to [localhost:3000](http://localhost:3000) (add manually the port 3000 if necessary):
 
