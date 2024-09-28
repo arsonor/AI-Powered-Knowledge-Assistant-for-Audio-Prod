@@ -23,7 +23,7 @@ a free course about LLMs and RAG.
 [Project overview](#project-overview)  
 [Dataset](#dataset)  
 [Technologies used in this project](#technologies-used-in-this-project)  
-[Preparation (API Key and installing dependencies)](#preparation-%28api-key-and-installing-dependencies%29)  
+[Preparation (API Key and installing dependencies)](#preparation-%28api-key-and-installing-dependencies%29) 
 [Running the application](#running-the-application)  
 [Using the application](#using-the-application)  
 [Details on the code](#code)  
