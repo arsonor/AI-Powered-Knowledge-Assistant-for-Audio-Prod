@@ -371,7 +371,7 @@ Next Steps:
 ### RAG flow evaluation
 
 I used the LLM-as-a-Judge method 2 metric to evaluate the quality
-of my RAG flow.
+of the answers.
 
 For `gpt-4o-mini`, in a sample with 200 records, I had:
 
