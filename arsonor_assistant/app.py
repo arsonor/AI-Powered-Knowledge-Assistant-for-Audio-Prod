@@ -20,33 +20,43 @@ def main():
     # Session state initialization
     if 'conversation_id' not in st.session_state:
         st.session_state.conversation_id = str(uuid.uuid4())
-        print_log(f"New conversation started with ID: {st.session_state.conversation_id}")
+        print_log(f"New conversation started with ID: {st.session_state.conversation_id}")  
+    if 'feedback_given' not in st.session_state:
+        st.session_state.feedback_given = False
     if 'count' not in st.session_state:
         st.session_state.count = 0
         print_log("Feedback count initialized to 0")
+    if 'response_received' not in st.session_state:
+        st.session_state.response_received = False
 
     # Sidebar for settings
     st.sidebar.header("Settings")
+
     category_options = {
-    "Post-Production": "LA POST-PROD",
-    "Home-Studio": "LE HOME STUDIO",
-    "Sound Design": "LE SOUND DESIGN",
+        "None": None,
+        "Post-Production": "LA POST-PROD",
+        "Home-Studio": "LE HOME STUDIO",
+        "Sound Design": "LE SOUND DESIGN",
     }
-    
-    category_display = st.selectbox(
-        "Select a category:",
+
+    category_display = st.sidebar.selectbox(
+        "Select a category (optional):",
         list(category_options.keys()),
     )
 
     category = category_options[category_display]
 
-    print_log(f"User selected course: {category}")
+    if category:
+        print_log(f"User selected category: {category}")
+    else:
+        print_log("No category selected.")
 
     # User input form
     with st.form(key='question_form'):
         user_input = st.text_input("Enter your question:")
         submit_button = st.form_submit_button(label='Ask')
     
+
     if submit_button:
         print_log(f"User asked: '{user_input}'")
         with st.spinner('Processing...'):
@@ -61,8 +71,12 @@ def main():
             print(answer_data)
             st.write(answer_data['answer'])
 
+            st.session_state.response_received = True
+            st.session_state.feedback_given = False
+            print_log("Response generated. Feedback is now allowed.")
+
             try:
-                st.markdown(f"**Answer:** {answer_data['answer']}")
+                # st.markdown(f"**Answer:** {answer_data['answer']}")
 
                 if 'response_time' in answer_data:
                     st.markdown(f"**Response Time:** {answer_data['response_time']:.2f} seconds")
@@ -80,33 +94,44 @@ def main():
 
             # Save conversation to database
             print_log("Saving conversation to database")
-            save_conversation(st.session_state.conversation_id, user_input, answer_data, category)
+            category_to_save = category if category is not None else 'Unknown'
+            save_conversation(st.session_state.conversation_id, user_input, answer_data, category_to_save)
             print_log("Conversation saved successfully")
 
 
-    # Feedback buttons
-    st.sidebar.subheader("Feedback")
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        if st.button("👍"):
-            if 'count' not in st.session_state:
-                st.session_state.count = 0
+    # Feedback buttons section
+    st.subheader("Feedback")
+
+    def on_positive_feedback():
+        if not st.session_state.feedback_given and st.session_state.response_received:
             st.session_state.count += 1
+            st.session_state.feedback_given = True
             print_log(f"Positive feedback received. New count: {st.session_state.count}")
             save_feedback(st.session_state.conversation_id, 1)
             print_log("Positive feedback saved to database")
-    with col2:
-        if st.button("👎"):
-            if 'count' not in st.session_state:
-                st.session_state.count = 0
+
+    def on_negative_feedback():
+        if not st.session_state.feedback_given and st.session_state.response_received:
             st.session_state.count -= 1
+            st.session_state.feedback_given = True
             print_log(f"Negative feedback received. New count: {st.session_state.count}")
             save_feedback(st.session_state.conversation_id, -1)
             print_log("Negative feedback saved to database")
 
-    if 'count' in st.session_state:
-        st.sidebar.markdown(f"**Current Count:** {st.session_state.count}")
+    col1, col2 = st.columns(2)
 
+    with col1:
+        st.button("👍", 
+                on_click=on_positive_feedback,
+                disabled=not st.session_state.response_received or st.session_state.feedback_given)
+
+    with col2:
+        st.button("👎", 
+                on_click=on_negative_feedback,
+                disabled=not st.session_state.response_received or st.session_state.feedback_given)
+
+    # Display current feedback count in the sidebar
+    st.sidebar.markdown(f"**Current Count:** {st.session_state.count}")
 
 
     # Display recent conversations

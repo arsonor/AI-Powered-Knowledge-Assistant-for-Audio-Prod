@@ -57,6 +57,7 @@ CONTEXT:
 
 entry_template = """
 ARTICLE: {title}
+URL: {url}
 KEYWORDS: {tags}
 CONTENT: {chunk_text}
 """.strip()
