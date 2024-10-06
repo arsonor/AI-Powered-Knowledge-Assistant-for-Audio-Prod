@@ -1,28 +1,44 @@
 import json
-
-from time import time
+import os
+import time
 
 from openai import OpenAI
-
-import ingest
+from elasticsearch import Elasticsearch
 
 
 client = OpenAI()
-index = ingest.load_index()
+
+ELASTIC_URL = os.getenv("ELASTIC_URL", "http://elasticsearch:9200")
+INDEX_NAME = os.getenv("INDEX_NAME")
+es_client = Elasticsearch(ELASTIC_URL)
 
 
-def search(query):
-    boost = {
-        'title': 1.48,
-        'tags': 0.31,
-        'chunk_text': 2.91
+def elastic_search(query, category=None):
+    search_query = {
+        "size": 10,
+        "query": {
+            "bool": {
+                "must": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": ["title", "tags", "chunk_text"],
+                        "type": "best_fields"
+                    }
+                }
+            }
+        }
     }
+    
+    if category is not None:
+        search_query["query"]["bool"]["filter"] = {
+            "term": {
+                "category": category
+            }
+        }
 
-    results = index.search(
-        query=query, filter_dict={}, boost_dict=boost, num_results=20
-    )
-
-    return results
+    response = es_client.search(index=INDEX_NAME, body=search_query)
+    
+    return [hit['_source'] for hit in response['hits']['hits']]
 
 
 prompt_template = """
@@ -30,7 +46,8 @@ You're an audio engineer and sound designer instructor for beginners.
 You're particularly specialized in audio home-studio set-up, computer music production and audio post-production in general (editing, mixing and mastering). 
 Answer the QUESTION based on the CONTEXT from our arsonor knowledge database (articles).
 Use only the facts from the CONTEXT when answering the QUESTION.
-Finally add in your response the top 3 articles of arsonor (refer to the 'title') that are the best to read for answering this question.
+Finally, recommend the top 3 Arsonor articles that are the best to read for answering this question.
+For each recommended article, include both its title and URL.
 
 QUESTION: {question}
 
@@ -39,9 +56,9 @@ CONTEXT:
 """.strip()
 
 entry_template = """
-article title: {title}
-article keywords: {tags}
-content: {chunk_text}
+ARTICLE: {title}
+KEYWORDS: {tags}
+CONTENT: {chunk_text}
 """.strip()
 
 
@@ -56,19 +73,27 @@ def build_prompt(query, search_results):
 
 
 def llm(prompt, model="gpt-4o-mini"):
-    response = client.chat.completions.create(
-        model=model, messages=[{"role": "user", "content": prompt}]
-    )
+    start_time = time.time()
+    try:
+        response = client.chat.completions.create(
+            model=model, messages=[{"role": "user", "content": prompt}]
+        )
 
-    answer = response.choices[0].message.content
+        answer = response.choices[0].message.content
 
-    token_stats = {
-        "prompt_tokens": response.usage.prompt_tokens,
-        "completion_tokens": response.usage.completion_tokens,
-        "total_tokens": response.usage.total_tokens,
-    }
+        tokens = {
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
+            "total_tokens": response.usage.total_tokens,
+        }
 
-    return answer, token_stats
+        end_time = time.time()
+        response_time = end_time - start_time
+
+        return answer, tokens, response_time
+    except Exception as e:
+        print(f"Error in LLM call: {str(e)}")
+        return None, None, None
 
 
 evaluation_prompt_template = """
@@ -93,18 +118,32 @@ and provide your evaluation in parsable JSON without using code blocks:
 
 
 def evaluate_relevance(question, answer):
+    if answer is None:
+        return "ERROR", "Failed to generate answer", {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
+    
     prompt = evaluation_prompt_template.format(question=question, answer=answer)
-    evaluation, tokens = llm(prompt, model="gpt-4o-mini")
+    evaluation, tokens, _ = llm(prompt, model="gpt-4o-mini")
+    
+    if evaluation is None:
+        return "ERROR", "Failed to evaluate answer", tokens or {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
 
     try:
         json_eval = json.loads(evaluation)
-        return json_eval, tokens
+        return json_eval['Relevance'], json_eval['Explanation'], tokens
     except json.JSONDecodeError:
-        result = {"Relevance": "UNKNOWN", "Explanation": "Failed to parse evaluation"}
-        return result, tokens
+        try:
+            str_eval = evaluation.rstrip('}') + '}'
+            json_eval = json.loads(str_eval)
+            return json_eval['Relevance'], json_eval['Explanation'], tokens
+        except json.JSONDecodeError:
+            return "ERROR", "Failed to parse evaluation", tokens
+
 
 
 def calculate_openai_cost(model, tokens):
+    if tokens is None:
+        return 0
+    
     openai_cost = 0
 
     if model == "gpt-4o-mini":
@@ -117,38 +156,61 @@ def calculate_openai_cost(model, tokens):
     return openai_cost
 
 
-def rag(query, model="gpt-4o-mini"):
-    t0 = time()
+def rag(query, category=None, model="gpt-4o-mini"):
+    try:
+        search_results = elastic_search(query, category)
+        prompt = build_prompt(query, search_results)
+        answer, tokens, response_time = llm(prompt, model=model)
 
-    search_results = search(query)
-    prompt = build_prompt(query, search_results)
-    answer, token_stats = llm(prompt, model=model)
+        if answer is None:
+            return {
+                "answer": "I apologize, but I encountered an error while processing your question.",
+                "response_time": 0,
+                "relevance": "ERROR",
+                "relevance_explanation": "Failed to generate answer",
+                "model_used": model,
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+                "eval_prompt_tokens": 0,
+                "eval_completion_tokens": 0,
+                "eval_total_tokens": 0,
+                "openai_cost": 0,
+            }
 
-    relevance, rel_token_stats = evaluate_relevance(query, answer)
+        relevance, explanation, eval_tokens = evaluate_relevance(query, answer)
+        
+        openai_cost = calculate_openai_cost(model, tokens)
+        eval_cost = calculate_openai_cost(model, eval_tokens)
+        total_cost = openai_cost + eval_cost
 
-    t1 = time()
-    took = t1 - t0
-
-    openai_cost_rag = calculate_openai_cost(model, token_stats)
-    openai_cost_eval = calculate_openai_cost(model, rel_token_stats)
-
-    openai_cost = openai_cost_rag + openai_cost_eval
-
-    answer_data = {
-        "answer": answer,
-        "model_used": model,
-        "response_time": took,
-        "relevance": relevance.get("Relevance", "UNKNOWN"),
-        "relevance_explanation": relevance.get(
-            "Explanation", "Failed to parse evaluation"
-        ),
-        "prompt_tokens": token_stats["prompt_tokens"],
-        "completion_tokens": token_stats["completion_tokens"],
-        "total_tokens": token_stats["total_tokens"],
-        "eval_prompt_tokens": rel_token_stats["prompt_tokens"],
-        "eval_completion_tokens": rel_token_stats["completion_tokens"],
-        "eval_total_tokens": rel_token_stats["total_tokens"],
-        "openai_cost": openai_cost,
-    }
-
-    return answer_data
+        return {
+            "answer": answer,
+            "response_time": response_time,
+            "relevance": relevance,
+            "relevance_explanation": explanation,
+            "model_used": model,
+            "prompt_tokens": tokens["prompt_tokens"],
+            "completion_tokens": tokens["completion_tokens"],
+            "total_tokens": tokens["total_tokens"],
+            "eval_prompt_tokens": eval_tokens["prompt_tokens"],
+            "eval_completion_tokens": eval_tokens["completion_tokens"],
+            "eval_total_tokens": eval_tokens["total_tokens"],
+            "openai_cost": total_cost,
+        }
+    except Exception as e:
+        print(f"Error in RAG process: {str(e)}")
+        return {
+            "answer": "I apologize, but I encountered an error while processing your question.",
+            "response_time": 0,
+            "relevance": "ERROR",
+            "relevance_explanation": f"Error: {str(e)}",
+            "model_used": model,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "eval_prompt_tokens": 0,
+            "eval_completion_tokens": 0,
+            "eval_total_tokens": 0,
+            "openai_cost": 0,
+        }

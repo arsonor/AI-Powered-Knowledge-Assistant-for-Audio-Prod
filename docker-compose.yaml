@@ -1,6 +1,20 @@
 services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "${ELASTIC_PORT:-9200}:9200"
+      - "9300:9300"
+    mem_limit: 4GB
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
   postgres:
     image: postgres:13
+    container_name: postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -10,33 +24,30 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      DATA_PATH: "data/arsonor_chunks_id.json"
-    ports:
-      - "${APP_PORT:-5000}:5000"
-    depends_on:
-      - postgres
 
   streamlit:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["streamlit", "run", "streamlit_app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    container_name: streamlit
     environment:
+      ELASTIC_URL: http://elasticsearch:${ELASTIC_PORT:-9200}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      DATA_PATH: "data/arsonor_chunks_id.json"
+      DATA_PATH: "data/arsonor_chunks_300_50.json"
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      INDEX_NAME: ${INDEX_NAME}
     ports:
       - "8501:8501"
     depends_on:
-      - app
+      - elasticsearch
+      - postgres
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
     ports:
       - "3000:3000"
     volumes:
@@ -58,3 +69,4 @@ services:
 volumes:
   postgres_data:
   grafana_data:
+  elasticsearch_data:
