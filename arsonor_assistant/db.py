@@ -1,6 +1,7 @@
 import os
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
+from contextlib import contextmanager
 from psycopg2.extras import DictCursor
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -12,13 +13,13 @@ tz = ZoneInfo("Europe/Brussels")
 pool = SimpleConnectionPool(
     minconn=1,
     maxconn=10,
-    host=os.getenv("POSTGRES_HOST", "postgres"),
-    database=os.getenv("POSTGRES_DB", "arsonor_assistant"),
-    user=os.getenv("POSTGRES_USER", "your_username"),
-    password=os.getenv("POSTGRES_PASSWORD", "your_password"),
+    host=os.getenv("POSTGRES_HOST"),
+    database=os.getenv("POSTGRES_DB"),
+    user=os.getenv("POSTGRES_USER"),
+    password=os.getenv("POSTGRES_PASSWORD"),
 )
 
-
+@contextmanager
 def get_db_connection():
     conn = pool.getconn()
     conn.set_client_encoding('UTF8')

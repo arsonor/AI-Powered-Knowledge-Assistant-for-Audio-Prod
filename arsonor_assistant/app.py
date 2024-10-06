@@ -118,7 +118,7 @@ def main():
         if recent_conversations:
             df_columns = [
                 "question", "answer", "category", "model_used", "relevance", 
-                "relevance_explained"
+                "relevance_explanation"
             ]
             
             # Convert the recent conversations into a DataFrame
