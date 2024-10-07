@@ -149,11 +149,20 @@ Go to [localhost:3000](http://localhost:3000) (add manually the port 3000 if nec
 - Login: "admin"
 - Password: "admin"
 
-When prompted, keep "admin" as the new password.
+When prompted, keep "admin" as the new password (or just 'skip' this step).
 
 ### Dashboard
 
-Click on Dashboard and Arsonor_assistant.
+Click on `Dashboards` in the sidebar and `Arsonor assistant`.  
+If necessary, initialize the dashboard:
+```bash
+pipenv shell  
+
+cd grafana  
+
+python init.py
+```
+Once in Grafana, make sure to have `postgres` as "Host URL" (Sidebar: Connections --> Data Sources --> PostgreSQL)
 
 <p align="center">
   <img src="images/Capture d'écran 2024-10-06 213034.png">
@@ -168,17 +177,6 @@ The monitoring dashboard contains several panels:
 5. **Tokens (Time Series):** Another time series chart that tracks the number of tokens used in conversations over time. This helps to understand the usage patterns and the volume of data processed.
 6. **Model Used (Bar Chart):** A bar chart displaying the count of conversations based on the different models used. This panel provides insights into which AI models are most frequently used.
 7. **Response Time (Time Series):** A time series chart showing the response time of conversations over time. This panel is useful for identifying performance issues and ensuring the system's responsiveness.
-
-
-If necessary, initialize the dashboard:
-```bash
-pipenv shell  
-
-cd grafana  
-
-python init.py
-```
-Once in Grafana, make sure in Data Source --> PostgreSQL, 
 
 
 ## Code
@@ -212,10 +210,10 @@ I have the following notebooks:
 
 - [`1-arsonor_parse.ipynb`](notebooks/1-arsonor_parse.ipynb): The code for retrieving, chunking and cleaning articles text from the website and export a json file
 - [`2-text-search_rag_evaluation.ipynb`](notebooks/2-text-search_rag_evaluation.ipynb): The RAG flow and evaluation of the text-search system
-- [`3-embeddings_rag_evaluation.ipynb`](notebooks/3-embeddings_rag_evaluation.ipynb): The RAG flow and evaluation of the vector-search system
+- [`3-embeddings_rag_evaluation.ipynb`](notebooks/3-embeddings_rag_evaluation.ipynb): The RAG flow and retrieval evaluation for vector and hybrid-search system with different embedding models tested
 - [`ground_truth_data_generation.ipynb`](notebooks/ground_truth_data_generation.ipynb): Generating the ground-truth dataset for evaluations
-- [`minsearch.py`](notebooks/minsearch.py)
-- [`rag_experiments.ipynb`](notebooks/rag_experiments.ipynb)
+- [`minsearch.py`](notebooks/minsearch.py): an in-memory search engine (conceived during LLM Zoomcamp) which was first used before using elasticsearch
+- [`rag_experiments.ipynb`](notebooks/rag_experiments.ipynb): I experimented a new search process with a Two-level retrieval mechanism (article-level followed by chunk-level). The "build prompt" function is also boosted to retrieve more diverse text chunks but still relevant to the request. I also tested a new retrieval evaluation code (thanks Claude!) to be able to evaluate this new system. I have not used it for the final code in the pipeline but it's quite promising to further application in this way.
 
 ### Retrieval evaluation
 
@@ -233,16 +231,7 @@ Possible ways to improve could include:
   - Investigating semantic search approaches to better understand and retrieve the appropriate chunks within articles.
 
 With tuned boosting, the results at chunk-level improve quite drastically:
-- Hit rate: 70%, MRR: 42%
-
-The best boosting parameters:  
-```python
-boost = {
-'title': 1.48,
-'tags': 0.31,
-'chunk_text': 2.91  
-}
-```
+- Hit rate: 66%, MRR: 40%
 
 Next Steps:  
 - Increase chunk size
@@ -250,15 +239,40 @@ Next Steps:
 - Analyze Ranking Strategy: retrieve at the article-level first based on 'title' and 'tags' attributes, then at the chunk-level
 - Try other techniques: hybrid search (combining keyword and semantic search), re-ranking, ...
 
+I first tested to increase chunk size with a new dynamic method that don't cut sentences in the middle (see in[`1-arsonor_parse.ipynb`](notebooks/1-arsonor_parse.ipynb)).  
+This resulted in two new data json files:
+- "arsonor_chunks_300_50" (300 words chunks with 50 words overlap)
+- "arsonor_chunks_350_30" (350 words chunks with 30 words overlap)
+
+The Hit Rate and MRR results improved quite a lot with Minsearch, Text-search boosted. But the highest results were obtained when I replaced Minsearch by Elasticsearch:
+- for 300_50 chunks: Hit rate 87%, MRR 61%
+- for 350_30 chunks: Hit rate 86%, MRR 59%
+
+I then tested vector-search with different models of Sentence Transformers (multi-lingual paraphrase) and two Huggingface "specialized in french language" (camemBert and mBert). But to my great disappointment, the results were not up to par: 
+
+
+I have no explanation why the metrics don't improve at all with vector-search. You can watch yourself in [`3-embeddings_rag_evaluation.ipynb`](notebooks/3-embeddings_rag_evaluation.ipynb)
+
+I don't know either why they improved between Minsearch boosted and a basic elasticsearch text-search without boost.
+
+So, the actual system in the pipeline is finally this one:
+- dataset `arsonor_chunks_300_50.json`
+- text-search elasticsearch
+
 ### RAG flow evaluation
 
-I used the LLM-as-a-Judge method 2 metric to evaluate the quality
-of the answers.
+I used the LLM-as-a-Judge method 2 metric to evaluate the quality of the answers.
 
-For `gpt-4o-mini`, in a sample with 200 records, I had:
+For `gpt-4o-mini`, in a sample with 200 records, I had the following results:
 
+With arsonor_chunks_240_20:
+- RELEVANT           98%  
+- PARTLY RELEVANT    1.5%
+- NON RELEVANT       0.5% (it's just one actually totally relevant)
+
+With arsonor_chunks_300_50:
 - RELEVANT           98.5%  
-- PARTLY_RELEVANT    1.5%
+- PARTLY RELEVANT    1.5%
 
 
 
